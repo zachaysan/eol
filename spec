@@ -7,6 +7,10 @@ b = a + c
 
 c = 5
 
+puts b
+
+eoeol
+
 d = sum([1,2,3])
 
 e = [1,2,3,4,5]
@@ -15,7 +19,7 @@ f = (e) + c
 
 g = (e,f) # => 1, 7, 3, 9, 5
 
-eoeol
+puts (g)
 
 IDEAL "pre-machine-code"
 
