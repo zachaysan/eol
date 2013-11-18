@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'pp'
 
 filename = "./spec"
@@ -149,16 +150,63 @@ tokenized_program = program.map do |line|
   tokenize_line(line)
 end
 
-def run_program(tokenized_program)
+def sandwhich(symbol, node)
+    acc = ""
+    acc += translate_node(node.left) if node.left
+    acc += symbol
+    acc += translate_node(node.right) if node.right
+    acc
+end
+
+def translate_node(node)
+  if node.action == :symbolic_return
+    "#{node.value}"
+  elsif node.action == :immediate_return
+    "#{node.value}"
+  elsif node.action == :make_equal
+    sandwhich(" := ", node)
+  elsif node.action == :add
+    sandwhich(" + ", node)
+  elsif node.action == :puts
+    if node.right
+      "fmt.Println(" + translate_node(node.right) + ")"
+    else
+      'fmt.Println("")'
+    end
+  else
+    raise "Not Implemented"
+  end
+end
+go_program = <<-eos
+package main
+
+import "fmt"
+
+func main() {
+eos
+
+def run_program(tokenized_program, go_program)
   complete = tokenized_program.map{ | parent_node | parent_node.complete }.all?
 
+  pp tokenized_program
   while not complete
     complete = tokenized_program.map do | parent_node | 
-      pp parent_node.provides
-      pp parent_node.depends
+      puts "provides: #{parent_node.provides} depends: #{parent_node.depends}"
+      
+      go_program += translate_node(parent_node)
+      go_program += "\n"
       parent_node.complete
     end.all?
   end
+
+  go_program += '}'
+
+  puts go_program
+
+  File.open("temp.go", 'w') {|f| f.write(go_program) }
+  `go build temp.go`
+  foo = `./temp`
+  puts foo
 end
 
-run_program(tokenized_program)
+run_program(tokenized_program, go_program)
